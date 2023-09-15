@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "carsim-ml"
+version = "0.1.0"
+description = ""
+authors = ["Cameron Reid <csreid.cr@gmail.com>"]
+readme = "README.md"
+packages = [{include = "carsim_ml"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+jupyterlab = "^4.0.5"
+torch = "^2.0.1"
+numpy = "^1.25.2"
+pandas = "^2.0.3"
+torchvision = "^0.15.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
