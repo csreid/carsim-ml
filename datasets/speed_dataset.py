@@ -27,8 +27,6 @@ class SDDataset(Dataset):
 
 		self._df = self._df[self._df.in_files]
 
-		print(self._df.head())
-
 	def __len__(self):
 		return len(self._df) - self._ctx_len - 1
 
@@ -37,7 +35,6 @@ class SDDataset(Dataset):
 		end_idx = start_idx + self._ctx_len + 1
 
 		sample_data = self._df.iloc[start_idx:end_idx]
-		print(sample_data)
 
 		imgs_left = [
 			read_image(
@@ -54,12 +51,16 @@ class SDDataset(Dataset):
 			for _, d in sample_data.iterrows()
 		]
 
+		speed_x = torch.tensor(list(sample_data['vel_x']))
+		speed_y = torch.tensor(list(sample_data['vel_y']))
+		speed_z = torch.tensor(list(sample_data['vel_z']))
+
+		speed = torch.sqrt(speed_x ** 2 + speed_y ** 2 + speed_z ** 2) / 10
+
 		imgs_l = torch.stack(imgs_left)
 		imgs_r = torch.stack(imgs_right)
 
-		return imgs_l, imgs_r
+		return imgs_l.float()/255., imgs_r.float()/255., speed
 
 if __name__ == '__main__':
-	ds = SDDataset('data/run_2023_08_24_17_10_06/')
-
-	print(ds.__getitem__(0))
+	data = SDDataset('data/run_2023_08_24_17_10_06/', context_len=40)
