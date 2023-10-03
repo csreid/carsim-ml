@@ -1,7 +1,4 @@
 import time
-import sys
-sys.path.append('/home/csreid/.pyenv/versions/3.10.12/lib/python3.10/site-packages')
-
 import torch
 from tqdm import tqdm
 from torch.utils.data import DataLoader

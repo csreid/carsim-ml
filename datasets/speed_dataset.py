@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/home/csreid/.pyenv/versions/3.10.12/lib/python3.10/site-packages')
 import os
 import re
 from tqdm import tqdm

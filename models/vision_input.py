@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/home/csreid/.pyenv/versions/3.10.12/lib/python3.10/site-packages')
 import torch
 from tqdm import tqdm
 from torchvision.models import resnet18, ResNet18_Weights
