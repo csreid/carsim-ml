@@ -2,6 +2,7 @@ import sys
 sys.path.append('/home/csreid/.pyenv/versions/3.10.12/lib/python3.10/site-packages')
 import os
 import re
+from tqdm import tqdm
 
 import torch
 import numpy as np
@@ -13,6 +14,9 @@ class SDDataset(Dataset):
 	def __init__(self, data_dir, context_len=4):
 		self._data_dir = data_dir
 		self._df = pd.read_csv(f'{self._data_dir}/data.csv')
+		imu_df = pd.read_csv(f'{self._data_dir}/imu_data.csv')
+		self._df = self._df.merge(imu_df, on='frame')
+
 		self._ctx_len = context_len
 
 		regex = r'[^0-9]*(.*)_img.png'
@@ -55,12 +59,18 @@ class SDDataset(Dataset):
 		speed_y = torch.tensor(list(sample_data['vel_y']))
 		speed_z = torch.tensor(list(sample_data['vel_z']))
 
+		acc_x = torch.tensor(list(sample_data['acc_x']))
+		acc_y = torch.tensor(list(sample_data['acc_y']))
+		acc_z = torch.tensor(list(sample_data['acc_z']))
+
 		speed = torch.sqrt(speed_x ** 2 + speed_y ** 2 + speed_z ** 2) / 10
 
 		imgs_l = torch.stack(imgs_left)
 		imgs_r = torch.stack(imgs_right)
 
-		return imgs_l.float()/255., imgs_r.float()/255., speed
+		acc_vector = torch.stack([acc_x, acc_y, acc_z], dim=1)
+
+		return imgs_l.float()/255., imgs_r.float()/255., acc_vector, speed
 
 if __name__ == '__main__':
 	data = SDDataset('data/run_2023_08_24_17_10_06/', context_len=40)

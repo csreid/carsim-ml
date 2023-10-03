@@ -4,25 +4,24 @@ sys.path.append('/home/csreid/.pyenv/versions/3.10.12/lib/python3.10/site-packag
 
 import torch
 from tqdm import tqdm
-from img_dataset import ImageDataset
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 from torch.nn import MSELoss, HuberLoss, Sequential
-from vision_input import VisionInput
-from vision_reconstructor import VisionReconstructor
 import matplotlib.pyplot as plt
 
 writer = SummaryWriter()
 
 def epoch_log(model, dataset, epoch):
-	loader = DataLoader(dataset, batch_size=1000, shuffle=True)
+	loader = DataLoader(dataset, batch_size=1, shuffle=True)
 	X, _ = next(iter(loader))
-	X = X.to('cuda:0')
-	emb = model[0](X)
+	X = X.to('cpu')#.to('cuda:0')
+	emb = model.to('cpu')[0](X)
 
 	writer.add_embedding(emb, label_img=X, tag='Embeddings', global_step=epoch)
+
+	model.to('cuda:0')
 
 def log(model, loss, dataset, ctr):
 	loader = DataLoader(dataset, batch_size=4, shuffle=True)
@@ -36,7 +35,7 @@ def log(model, loss, dataset, ctr):
 	writer.add_images('Reconstructed Images', imgs, ctr)
 	writer.add_scalar('loss/reconstruction', loss, ctr)
 
-def train(model, dataset, epochs, batch_size, dev='cpu', log=None):
+def train(model, dataset, epochs, batch_size, dev='cpu', log=log):
 	loader = DataLoader(dataset, batch_size, shuffle=True)
 	model = model.to(dev)
 	opt = Adam(model.parameters())
@@ -69,19 +68,3 @@ def train(model, dataset, epochs, batch_size, dev='cpu', log=None):
 		torch.save(model.state_dict(), 'vision_reconstructor.pt')
 
 	return model
-if __name__ == '__main__':
-	model = Sequential(
-		VisionInput(256),
-		VisionReconstructor(256)
-	)
-
-	data = ImageDataset('data/run_2023_09_18_20_49_33/')
-	model = train(
-		model,
-		data,
-		epochs=100,
-		batch_size=256,
-		dev='cuda:0',
-		log=log
-	)
-	torch.save(model.state_dict(), 'vision_reconstructor.pt')

@@ -5,22 +5,24 @@ from tqdm import tqdm
 from torchvision.models import resnet18, ResNet18_Weights
 from torch.nn import Module, LSTM, Linear, ConvTranspose2d, functional as F
 from torch.utils.data import DataLoader
-from speed_dataset import SDDataset
-from vision_input import VisionInput
+from models.vision_input import VisionInput
 
-class Vision(Module):
-	def __init__(self):
+class SpeedModel(Module):
+	def __init__(self, img_features, pretrained=True, dev='cpu'):
 		super().__init__()
-		self._img_features = 64
-		self.vision = VisionInput(self._img_features)
+		self._img_features = img_features
+		self.vision = VisionInput(self._img_features, pretrained)
 
-		self.precurrent1 = Linear(self._img_features*2, 64)
-		self.precurrent2 = Linear(64, 64)
-		self.speed_recurrent = LSTM(64, 64, batch_first=True)
+		self.precurrent1 = Linear(self._img_features*2, 256)
+		self.precurrent2 = Linear(256, 256)
+		self.speed_recurrent = LSTM(259, 64, batch_first=True)
 		self.speed_out = Linear(64, 1)
-		self._device = 'cpu'
 
-	def forward(self, imgs_l, imgs_r):
+		self.acc_feats = Linear(3, 3)
+		self._device = dev
+
+	def forward(self, imgs_l, imgs_r, acc_vectors):
+		# batch, seq, channels, x, y
 		batch_size = imgs_l.shape[0]
 		seq_len = imgs_l.shape[1]
 		channels = imgs_l.shape[2]
@@ -40,11 +42,10 @@ class Vision(Module):
 		out = torch.cat([img_feats_r, img_feats_l], dim=2)
 		out = F.tanh(self.precurrent1(out))
 		out = F.tanh(self.precurrent2(out))
+
+		acc = F.tanh(self.acc_feats(acc_vectors))
+		out = torch.cat([out, acc], dim=2)
 		out, _ = self.speed_recurrent(out)
-		#out = self.speed_fc1(out)
-		#out = F.tanh(out)
-		#out = self.speed_fc2(out)
-		#out = F.tanh(out)
 		out = self.speed_out(out).squeeze(2)
 		out = F.tanh(out)
 
