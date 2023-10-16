@@ -14,14 +14,18 @@ def epoch_log(model, dataset, epoch):
 	loader = DataLoader(dataset, batch_size=1000, shuffle=True)
 	X, _ = next(iter(loader))
 	X = X.to('cuda:0')
-	emb = model.vision(X)
+	with torch.no_grad():
+		emb = model.vision(X)
 
 	writer.add_embedding(emb, label_img=X, tag='Embeddings', global_step=epoch)
+	writer.flush()
 
 def log(model, loss, dataset, step):
 	loader = DataLoader(dataset, batch_size=4, shuffle=True)
 	sample_l, sample_r, acc, sample_speeds = next(iter(loader))
-	speed_est = model(sample_l.to('cuda:0'), sample_r.to('cuda:0'), acc.to('cuda:0')).squeeze()
+	with torch.no_grad():
+		speed_est = model(sample_l.to('cuda:0'), sample_r.to('cuda:0'), acc.to('cuda:0')).squeeze()
+
 	sample_speeds = sample_speeds.squeeze()
 
 	fig = plt.figure()
@@ -61,6 +65,8 @@ def log(model, loss, dataset, step):
 		torch.mean(torch.abs(speed_est - torch.mean(speed_est))),
 		step
 	)
+
+	writer.flush()
 
 def train(model, dataset, epochs, batch_size, dev='cpu', checkpoint_on='end'):
 	loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
