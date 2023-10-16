@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 from torchvision.models import resnet18, ResNet18_Weights
-from torch.nn import Module, LSTM, Linear, ConvTranspose2d, functional as F, Sequential, ReLU
+from torch.nn import Module, LSTM, Linear, ConvTranspose2d, functional as F, Sequential, ReLU, Sigmoid
 
 class VisionReconstructor(Module):
 	def __init__(self, img_features):
@@ -10,15 +10,15 @@ class VisionReconstructor(Module):
 		self.fc = Linear(img_features, 4096)
 		self.deconv = Sequential(
 			ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),
-			ReLU(),
+			Sigmoid(),
 			ConvTranspose2d(128, 128, kernel_size=4, stride=2, padding=1),
-			ReLU(),
+			Sigmoid(),
 			ConvTranspose2d(128, 128, kernel_size=4, stride=2, padding=1),
-			ReLU(),
+			Simgoid(),
 			ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
-			ReLU(),
+			Simgoid(),
 			ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
-			ReLU(),
+			Simgoid(),
 			ConvTranspose2d(32, 3, kernel_size=4, stride=2, padding=1),
 		)
 
